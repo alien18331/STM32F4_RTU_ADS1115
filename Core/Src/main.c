@@ -373,30 +373,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/*
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-
- UNUSED(huart);
- 	HAL_UART_Receive_DMA(&huart6, rxbuffer, 20);
-	for(int i=0;i<8;i++)
-	{
-		 osMessagePut(ModBusInHandle,rxbuffer[i], 100);
-	}
-	memset(rxbuffer,0,20);
-
-}
-*/
-
 void USER_UART_IRQHandler(UART_HandleTypeDef *huart)
 {
-	if(huart->Instance == USART6)                                   //判断是否是串口1（！此处应写(huart->Instance == USART1)
+	if(huart->Instance == USART6)
     {
-        if(RESET != __HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE))   //判断是否是空闲中断
+        if(RESET != __HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE))   //Idle interrupt case.
         {
-            __HAL_UART_CLEAR_IDLEFLAG(&huart6);                     //清楚空闲中断标志（否则会一直不断进入中断）
-            printf("\r\nUART6 Idle IQR Detected\r\n");
-            USAR_UART_IDLECallback(huart);                          //调用中断处理函数
+            __HAL_UART_CLEAR_IDLEFLAG(&huart6);                     //clear idle flag, or process will trigger idle interrupt process.
+            //printf("\r\nUART6 Idle IQR Detected\r\n");
+            USAR_UART_IDLECallback(huart);                          //Idle interrupt callback
         }
     }
 }
@@ -408,18 +393,9 @@ void USAR_UART_IDLECallback(UART_HandleTypeDef *huart)
 
     uint8_t data_length  = 255 - __HAL_DMA_GET_COUNTER(&hdma_usart6_rx);   //计算接收到的数据长度
 
-    /*
-    printf("Receive Data(length = %d): ",data_length);
-    HAL_UART_Transmit(&huart6,receive_buff,data_length,0x200);                     //测试函数：将接收到的数据打印出去
-    printf("\r\n");
-    */
-
     if (rxbuffer[0]==slaveID)
 	{
-		/* if slaveID match
-		 * put rxbuffer to ModBusInHandle
-		 */
-		__NOP();
+		// if slaveID match, put rxbuffer to ModBusInHandle
 		for(int i=0;i<data_length;i++)
 			osMessagePut(ModBusInHandle,rxbuffer[i], data_length);
 	}else{
@@ -429,11 +405,7 @@ void USAR_UART_IDLECallback(UART_HandleTypeDef *huart)
 		HAL_Delay(10);
 	}
 
-    //reset buffer
-    //memset(receive_buff,0,data_length);
-    //data_length = 0;
-
-    //restart DMA and transmit 255 byte per times.
+    //restart DMA and transmit 255 word per times.
     HAL_UART_Receive_DMA(&huart6, (uint8_t*)rxbuffer, 255);
 }
 
@@ -499,14 +471,6 @@ void ModbusSetThread(void const * argument)
 		   ModBus_SetRegister(5,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data));
 		   ModBus_SetRegister(6,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data));
 		   ModBus_SetRegister(7,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data));
-
-//		   ModBus_SetRegister(1,1);
-//		   ModBus_SetRegister(2,(int)ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH1.data * 1000);
-//		   ModBus_SetRegister(3,(int)ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH2.data * 1000);
-//		   ModBus_SetRegister(4,(int)ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH1.data * 1000);
-//		   ModBus_SetRegister(5,(int)ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data * 1000);
-//		   ModBus_SetRegister(6,(int)ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data * 1000);
-//		   ModBus_SetRegister(7,(int)ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data * 1000);
 
     osDelay(1);
   }
