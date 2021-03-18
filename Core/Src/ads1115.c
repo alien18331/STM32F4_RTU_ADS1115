@@ -12,9 +12,9 @@ extern I2C_HandleTypeDef hi2c1;
 extern unsigned char ADSwrite[6];
 extern uint8_t ADS1115_ADDRESS;
 extern int16_t reading;
-//extern int16_t result;
+extern int16_t result;
 extern const float voltageConv;
-//extern const float currentConv;
+extern const float currentConv;
 
 int maxRaw = 0;
 int16_t minRaw = 1000;
@@ -143,7 +143,7 @@ void Read_ads1115(ADS1115_BOARD * ADS1115_BOARD_SELECT,uint8_t ADDRESS)
 		 */
 		HAL_I2C_Master_Receive(&hi2c1, ADDRESS<<1, ADSwrite, 2, 100);
 		reading = (ADSwrite[0] << 8 | ADSwrite[1]);
-		//result = reading;
+		result = (ADSwrite[0] << 8 | ADSwrite[1]);
 
 		if(reading >= 0x8000 && reading <= 0xffff)
 		{
@@ -160,8 +160,8 @@ void Read_ads1115(ADS1115_BOARD * ADS1115_BOARD_SELECT,uint8_t ADDRESS)
 		if(i == 0)
 		{
 			// for voltage mode
-			//ADS1115_BOARD_SELECT->ADS1115_CH1.data = reading * voltageConv;
-			ADS1115_BOARD_SELECT->ADS1115_CH1.data = reading;
+			ADS1115_BOARD_SELECT->ADS1115_CH1.data = reading * voltageConv;
+			//ADS1115_BOARD_SELECT->ADS1115_CH1.data = result;
 
 			//for current mode
 			//ADS1115_BOARD_SELECT->ADS1115_CH1.data = ((reading * currentConv) + 4);
@@ -169,12 +169,12 @@ void Read_ads1115(ADS1115_BOARD * ADS1115_BOARD_SELECT,uint8_t ADDRESS)
 		else if(i == 1)
 		{
 			// for voltage mode
-			//ADS1115_BOARD_SELECT->ADS1115_CH2.data = reading * voltageConv;
+			ADS1115_BOARD_SELECT->ADS1115_CH2.data = reading * voltageConv;
 			//ADS1115_BOARD_SELECT->ADS1115_CH2.data = reading;
 
 			//for current mode
 			//ADS1115_BOARD_SELECT->ADS1115_CH2.data = ((reading * currentConv) + 4);
-			ADS1115_BOARD_SELECT->ADS1115_CH2.data = reading;
+			//ADS1115_BOARD_SELECT->ADS1115_CH2.data = result;
 		}
 	}
 

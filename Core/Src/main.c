@@ -39,8 +39,10 @@ uint8_t ADS1115_ADDRESS = 0x48;
 unsigned char ADSwrite[6];
 unsigned char ADS1115_ADDRES[4];
 int16_t reading;
+int16_t result;
 float voltageT[4];
 const float voltageConv = 6.114 / 32768.0;
+const float currentConv = 16 / 16384;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
