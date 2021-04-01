@@ -77,4 +77,4 @@ stm32f4xx_hal_i2c.c:7030:26:I2C_WaitOnBTFFlagUntilTimeout	24	static
 stm32f4xx_hal_i2c.c:7068:26:I2C_WaitOnSTOPFlagUntilTimeout	24	static
 stm32f4xx_hal_i2c.c:7103:26:I2C_WaitOnRXNEFlagUntilTimeout	24	static
 stm32f4xx_hal_i2c.c:7148:26:I2C_IsAcknowledgeFailed	16	static
-stm32f4xx_hal_i2c.c:7173:13:I2C_ConvertOtherXferOptions	16	static
+stm32f4xx_hal_i2c.c:7174:13:I2C_ConvertOtherXferOptions	16	static

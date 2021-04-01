@@ -431,20 +431,19 @@ void ModbusTransThread(void const * argument)
   {
 	 // ModBus_SetRegister(0,5+1);
 
-    osEvent evt = osMessageGet(ModBusOutHandle,200); // wait here 200 tick
+    osEvent evt = osMessageGet(ModBusOutHandle, 20); // wait here 200 tick
     if (evt.status == osEventMessage)
-      {
-
+    {
         buf[c++]=(uint8_t) evt.value.v;
-      }
+    }
     if (evt.status == osEventTimeout)
-      {
+    {
         if( (c > 0) && (c < 254) ) // ok, something in buffer exist, lets send it
         {
         	HAL_StatusTypeDef AA = HAL_UART_Transmit(&huart6, buf, c, 50); // by USB-CDC
         }
-      c=0;
-      }
+        c=0;
+    }
 
     osDelay(1);
   }
@@ -464,15 +463,14 @@ void ModbusSetThread(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-
-		   ModBus_SetRegister(0,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH1.data));
-		   ModBus_SetRegister(1,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH2.data));
-		   ModBus_SetRegister(2,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH1.data));
-		   ModBus_SetRegister(3,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH2.data));
-		   ModBus_SetRegister(4,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH1.data));
-		   ModBus_SetRegister(5,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data));
-		   ModBus_SetRegister(6,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data));
-		   ModBus_SetRegister(7,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data));
+	ModBus_SetRegister(0,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH1.data));
+	ModBus_SetRegister(1,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH2.data));
+	ModBus_SetRegister(2,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH1.data));
+	ModBus_SetRegister(3,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH2.data));
+	ModBus_SetRegister(4,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH1.data));
+	ModBus_SetRegister(5,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data));
+	ModBus_SetRegister(6,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data));
+	ModBus_SetRegister(7,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data));
 
     osDelay(1);
   }

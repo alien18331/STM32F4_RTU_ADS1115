@@ -7147,7 +7147,8 @@ static HAL_StatusTypeDef I2C_WaitOnRXNEFlagUntilTimeout(I2C_HandleTypeDef *hi2c,
   */
 static HAL_StatusTypeDef I2C_IsAcknowledgeFailed(I2C_HandleTypeDef *hi2c)
 {
-  if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_AF) == SET)
+
+	if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_AF) == SET)
   {
     /* Clear NACKF Flag */
     __HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_AF);
