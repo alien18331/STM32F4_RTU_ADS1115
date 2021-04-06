@@ -30,22 +30,22 @@ void ModBusTask(void const * argument)
 {
   for(;;)
   {
-    osEvent evt = osMessageGet(ModBusInHandle, ModBus35);
+    osEvent evt = osMessageGet(ModBusInHandle,ModBus35);
     // Frame end?
     if (evt.status == osEventTimeout)
-    {
+      {
         if(mb_buf_in_count > 0) // ok, something in buffer exist, lets parse it
         {
           ModBusParse();
         }  
-        mb_buf_in_count=0;
-    }
+      mb_buf_in_count=0;
+      }
     // Wow, something come!
     if (evt.status == osEventMessage)
       {
         uint8_t byte = (uint8_t) evt.value.v;
         // buffer has space for incoming?
-        if(mb_buf_in_count<8) //254
+        if(mb_buf_in_count<254)
         {
           mb_buf_in[mb_buf_in_count]=byte;
           mb_buf_in_count=mb_buf_in_count+1; // prevent opt/war on come compilers
@@ -106,10 +106,10 @@ void ModBusParse(void)
       {
         case 3:
           // read holding registers. by bytes addr func starth startl totalh totall
-          st = mb_buf_in[2]*256 + mb_buf_in[3];
-          nu = mb_buf_in[4]*256 + mb_buf_in[5];
+          st=mb_buf_in[2]*256+mb_buf_in[3];
+          nu=mb_buf_in[4]*256+mb_buf_in[5];
           if( (st+nu) > ModBusRegisters) // dont ask more, that we has!
-            { //non-use
+            {
               mb_buf_out[mb_buf_out_count++]=mb_addr;
               mb_buf_out[mb_buf_out_count++]=func+0x80;
               mb_buf_out[mb_buf_out_count++]=2;
@@ -126,7 +126,6 @@ void ModBusParse(void)
                 }
             }
           break;
-        /*
         case 16: 
           // write holding registers. by bytes addr func starth startl totalh totall num_bytes regh regl ...
           st=mb_buf_in[2]*256+mb_buf_in[3];
@@ -151,7 +150,6 @@ void ModBusParse(void)
               mb_buf_out[mb_buf_out_count++]=mb_buf_in[5];
             }
           break;
-        */
         default:  
           // Exception as we does not provide this function
           mb_buf_out[mb_buf_out_count++]=mb_addr;

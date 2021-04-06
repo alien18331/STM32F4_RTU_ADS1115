@@ -11,7 +11,7 @@ extern "C" {
 #include "cmsis_os.h"
 // 3,5 character timeout or frame timeout
 // This value for 9600 speed and 1000Hz tick counter
-#define ModBus35 10
+#define ModBus35 35
 // How many holding registers we are serve?
 #define ModBusRegisters 100 // 0-9
    // message queue for outgoing bytes

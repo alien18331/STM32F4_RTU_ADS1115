@@ -34,15 +34,13 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-uint8_t rxbuffer[255];
+uint8_t rxbuffer[20];
 uint8_t ADS1115_ADDRESS = 0x48;
 unsigned char ADSwrite[6];
 unsigned char ADS1115_ADDRES[4];
 int16_t reading;
-int16_t result;
 float voltageT[4];
 const float voltageConv = 6.114 / 32768.0;
-const float currentConv = 16 / 16384;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -138,7 +136,7 @@ int main(void)
   MX_USART6_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  delay_init(10);
+  delay_init(168);
 
 
   //TODO: read DIP switch
@@ -158,14 +156,11 @@ int main(void)
 	  slaveID += SwitchValue[i] * pow(2,i);
   }
 
-  delay_ms(1);
+  delay_ms(100);
 
  //ADCstatus =  HAL_ADC_Stop_DMA(&hadc1);
 
-  //HAL_UART_Receive_DMA(&huart6, rxbuffer, 8);
-  __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
-  //set DMA receive, transmit 255 word every time.
-  HAL_UART_Receive_DMA(&huart6, (uint8_t*)rxbuffer, 255);
+  HAL_UART_Receive_DMA(&huart6, rxbuffer, 8);
 
   ADS1115_ADDRES[0] = ADS1115_ADDRESS_ADDR_GND;
   ADS1115_ADDRES[1] = ADS1115_ADDRESS_ADDR_VDD;
@@ -214,7 +209,6 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
   while (1)
   {
     /* USER CODE END WHILE */
@@ -375,40 +369,20 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void USER_UART_IRQHandler(UART_HandleTypeDef *huart)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if(huart->Instance == USART6)
-    {
-        if(RESET != __HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE))   //Idle interrupt case.
-        {
-            __HAL_UART_CLEAR_IDLEFLAG(&huart6);                     //clear idle flag, or process will trigger idle interrupt process.
-            //printf("\r\nUART6 Idle IQR Detected\r\n");
-            USAR_UART_IDLECallback(huart);                          //Idle interrupt callback
-        }
-    }
-}
+ /* Prevent unused argument(s) compilation warning */
+ UNUSED(huart);
+ /* NOTE: This function should not be modified, when the callback is needed,
+          the HAL_UART_RxCpltCallback could be implemented in the user file
+  */
 
-void USAR_UART_IDLECallback(UART_HandleTypeDef *huart)
-{
-	//STOP DMA
-    HAL_UART_DMAStop(&huart6);
-
-    uint8_t data_length  = 255 - __HAL_DMA_GET_COUNTER(&hdma_usart6_rx);   //计算接收到的数据长度
-
-    if (rxbuffer[0]==slaveID)
+ 	HAL_UART_Receive_DMA(&huart6, rxbuffer, 20);
+	for(int i=0;i<8;i++)
 	{
-		// if slaveID match, put rxbuffer to ModBusInHandle
-		for(int i=0;i<data_length;i++)
-			osMessagePut(ModBusInHandle,rxbuffer[i], data_length);
-	}else{
-		// if uart RX_ID no match slaveID(switch on board), reset rxbuffer
-		memset(rxbuffer,0,data_length);
-		data_length = 0;
-		HAL_Delay(10);
+		 osMessagePut(ModBusInHandle,rxbuffer[i], 100);
 	}
-
-    //restart DMA and transmit 255 word per times.
-    HAL_UART_Receive_DMA(&huart6, (uint8_t*)rxbuffer, 255);
+	memset(rxbuffer,0,strlen(rxbuffer));
 }
 
 /* USER CODE END 4 */
@@ -431,19 +405,20 @@ void ModbusTransThread(void const * argument)
   {
 	 // ModBus_SetRegister(0,5+1);
 
-    osEvent evt = osMessageGet(ModBusOutHandle, 20); // wait here 200 tick
+    osEvent evt = osMessageGet(ModBusOutHandle,200); // wait here 200 tick
     if (evt.status == osEventMessage)
-    {
+      {
+
         buf[c++]=(uint8_t) evt.value.v;
-    }
+      }
     if (evt.status == osEventTimeout)
-    {
+      {
         if( (c > 0) && (c < 254) ) // ok, something in buffer exist, lets send it
         {
         	HAL_StatusTypeDef AA = HAL_UART_Transmit(&huart6, buf, c, 50); // by USB-CDC
         }
-        c=0;
-    }
+      c=0;
+      }
 
     osDelay(1);
   }
@@ -463,14 +438,23 @@ void ModbusSetThread(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	ModBus_SetRegister(0,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH1.data));
-	ModBus_SetRegister(1,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH2.data));
-	ModBus_SetRegister(2,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH1.data));
-	ModBus_SetRegister(3,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH2.data));
-	ModBus_SetRegister(4,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH1.data));
-	ModBus_SetRegister(5,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data));
-	ModBus_SetRegister(6,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data));
-	ModBus_SetRegister(7,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data));
+
+		   ModBus_SetRegister(0,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH1.data));
+		   ModBus_SetRegister(1,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_GND_BOARD.ADS1115_CH2.data));
+		   ModBus_SetRegister(2,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH1.data));
+		   ModBus_SetRegister(3,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH2.data));
+		   ModBus_SetRegister(4,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH1.data));
+		   ModBus_SetRegister(5,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data));
+		   ModBus_SetRegister(6,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data));
+		   ModBus_SetRegister(7,(int)Convert2Modbus(ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data));
+
+//		   ModBus_SetRegister(1,1);
+//		   ModBus_SetRegister(2,(int)ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH1.data * 1000);
+//		   ModBus_SetRegister(3,(int)ADS1115_ADDRESS_ADDR_VDD_BOARD.ADS1115_CH2.data * 1000);
+//		   ModBus_SetRegister(4,(int)ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH1.data * 1000);
+//		   ModBus_SetRegister(5,(int)ADS1115_ADDRESS_ADDR_SDA_BOARD.ADS1115_CH2.data * 1000);
+//		   ModBus_SetRegister(6,(int)ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH1.data * 1000);
+//		   ModBus_SetRegister(7,(int)ADS1115_ADDRESS_ADDR_SCL_BOARD.ADS1115_CH2.data * 1000);
 
     osDelay(1);
   }
